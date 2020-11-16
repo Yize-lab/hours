@@ -1,0 +1,59 @@
+server:
+  port: 18088
+spring:
+  application:
+    name: hours
+  output:
+    ansi:
+      enabled: detect
+  mail:
+#    host: smtp.163.com #SMTP服务器地址
+#    username: haijun504370@163.com #登陆账号
+#    password: YPLEPSERUAHSFDVB #登陆密码（或授权码）
+#    properties:
+#      from: haijun504370@163.com #邮件发信人（即真实邮箱）
+    host: smtp.exmail.qq.com #SMTP服务器地址
+    username: qaadmin@tcfuture.tech #登陆账号
+    password: p2H4HveWQj99RZp6 #登陆密码（或授权码）
+    properties:
+      from: qaadmin@tcfuture.tech #邮件发信人（即真实邮箱）
+  thymeleaf:
+    cache: false
+    prefix: classpath:/views/
+  servlet:
+    multipart:
+      max-file-size: 10MB #限制单个文件大小
+      max-request-size: 50MB #限制请求总量
+
+  #db config
+  datasource:
+    url: jdbc:mysql://localhost:3306/db_hours?useSSL=false&characterEncoding=utf8&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 20
+      idle-timeout: 600000
+      connection-timeout: 5000
+      max-lifetime: 1800000
+      pool-name: XddHikariCP
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    database: 1
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+    open-in-view: false
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQL55Dialect
+  mvc:
+    async:
+      request-timeout: 300s
+
+swagger:
+  enable: true
