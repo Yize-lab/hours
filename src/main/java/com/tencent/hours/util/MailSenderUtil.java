@@ -51,7 +51,7 @@ public class MailSenderUtil {
 
 
     public final String EMP_CONTENT_TEMPLATE = "西区小伙伴，\n" +
-            "系统监测到您%s的工时未填写，请关注工时填报及时性并在两天之内完成系统填报。谢谢！\n" +
+            "系统监测到您%s的工时未填写，请关注工时填报及时性并在两天之内完成系统填报。谢谢！若本周内还未完成填报，系统将自动抄送给对应leader。\n" +
             "详细操作指引可见地址：https://gdc.lexiangla.com/teams/k100014/classes/347917aad6e611ea85bd0a58ac130ead/courses/a92d350a22a311eba2f68e8cefdf4a31?company_from=gdc";
     public final String LEADER_CONTENT_TEMPLATE = "Dear Leaders,\n" +
             "关于%s期间，整体西区成员工时填报情况及对应各个部门未填报情况及明细如下，请大家关注并督促大家完成工时填报，谢谢！\n";

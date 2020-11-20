@@ -13,7 +13,6 @@ import com.tencent.hours.repository.*;
 import com.tencent.hours.service.WarnService;
 import com.tencent.hours.util.LocalReadListener;
 import com.tencent.hours.util.MailSenderUtil;
-import io.netty.util.internal.UnstableApi;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -56,6 +56,17 @@ public class WarnServiceImpl implements WarnService {
     private MailSenderUtil mailSenderUtil;
     @Autowired
     private EmployeeLeaderRepository employeeLeaderRepository;
+
+    private final String THRESHOLD_DEFAULT = "2";
+
+
+    @PostConstruct
+    public void initThreshold() {
+        String thresholdStr = redisTemplate.opsForValue().get(CommonConstant.RedisKey.THRESHOLD_KEY);
+        if (thresholdStr == null) {
+            redisTemplate.opsForValue().set(CommonConstant.RedisKey.THRESHOLD_KEY, THRESHOLD_DEFAULT);
+        }
+    }
 
 
     @Transactional(rollbackFor = Exception.class)
@@ -92,11 +103,13 @@ public class WarnServiceImpl implements WarnService {
             throw new RuntimeException("parse file failed !");
         }
         if (!CollectionUtils.isEmpty(hoursTempList)) {
+            hoursTempRepository.deleteAll();
             hoursTempRepository.saveAll(hoursTempList);
             List<Map<String, String>> lastSpendDateList = hoursTempRepository.findLastSpendDate();
             String lastSpendStr = JSON.toJSONString(lastSpendDateList);
             List<EmpWarnDto> empWarnDtoList = JSON.parseArray(lastSpendStr, EmpWarnDto.class);
-            Integer threshold = Integer.valueOf(redisTemplate.opsForValue().get(CommonConstant.RedisKey.THRESHOLD_KEY));
+            String thresholdStr = redisTemplate.opsForValue().get(CommonConstant.RedisKey.THRESHOLD_KEY);
+            Integer threshold = Integer.valueOf(thresholdStr);
             if (threshold == null) {
                 threshold = 1;
             }
@@ -113,6 +126,8 @@ public class WarnServiceImpl implements WarnService {
                 //工时补填更新
                 clearRepair();
                 List<WarnLog> warnLogList = warnLogRepository.findByLackDateAndSendStatus(LocalDate.now(), Boolean.FALSE);
+                // TODO: 2020/11/16 删除临时数据
+
                 if (!CollectionUtils.isEmpty(warnLogList)) {
                     throw new RuntimeException("邮件可能发送失败");
                 }
@@ -128,13 +143,20 @@ public class WarnServiceImpl implements WarnService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void clearRepair() {
         List<Map<String, Object>> supplementList = warnLogRepository.findSupplement();
-        List<Long> idList = JSON.parseArray(JSON.toJSONString(supplementList), Long.class);
-        warnLogRepository.deleteAllById(idList);
+        if (!CollectionUtils.isEmpty(supplementList)) {
+            List<Long> idList = supplementList.stream().map(m -> Long.valueOf(m.get("id").toString())).collect(Collectors.toList());
+            warnLogRepository.deleteAllByIdIn(idList);
+        }
     }
 
     @Override
     public void setThreshold(Integer threshold) {
         redisTemplate.opsForValue().set(CommonConstant.RedisKey.THRESHOLD_KEY, threshold.toString());
+    }
+
+    @Override
+    public Integer getThreshold() {
+        return Integer.valueOf(redisTemplate.opsForValue().get(CommonConstant.RedisKey.THRESHOLD_KEY));
     }
 
     @Override

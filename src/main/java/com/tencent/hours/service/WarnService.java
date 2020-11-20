@@ -45,4 +45,6 @@ public interface WarnService {
      * @return
      */
     List<EmployeeLackDto> findEmpList();
+
+    Integer getThreshold();
 }

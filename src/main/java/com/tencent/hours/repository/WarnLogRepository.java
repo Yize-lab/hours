@@ -51,7 +51,7 @@ public interface WarnLogRepository extends JpaRepository<WarnLog, Long> {
             "\tAND t1.lack_date = t2.spend_date",nativeQuery = true)
     List<Map<String, Object>> findSupplement();
 
-    void deleteAllById(List<Long> idList);
+    void deleteAllByIdIn(List<Long> idList);
 
 
     @Query(value="SELECT\n" +

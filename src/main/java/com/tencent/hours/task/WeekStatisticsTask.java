@@ -32,7 +32,7 @@ public class WeekStatisticsTask {
     @Autowired
     private EmployeeLeaderRepository employeeLeaderRepository;
 
-    //    @Scheduled(cron = "* 0/5 * ? * *")
+    @Scheduled(cron = "0 0 10 ? * 1-2") //每周日/周一上午10点发送统计邮件
     public void sendWeekWarnMail() {
         List<DepWarnCountDto> depWarnCountDtoList = warnService.findWeekWarnGroupByEmp();
         List<EmployeeLackDto> employeeLackDtoList = warnService.findEmpList();

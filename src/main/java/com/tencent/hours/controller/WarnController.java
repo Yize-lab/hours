@@ -45,5 +45,11 @@ public class WarnController {
         warnService.uploadCountryHoliday(file);
     }
 
+    @ApiOperation("查看提醒阈值")
+    @GetMapping("threshold")
+    public Integer getThreshold() {
+        return warnService.getThreshold();
+    }
+
 
 }
