@@ -23,4 +23,12 @@ public class TestController {
     public void send(){
         weekStatisticsTask.sendWeekWarnMail();
     }
+
+
+    @GetMapping("test")
+    @ApiOperation("测试")
+    public void test(){
+        System.err.println(Thread.currentThread().getName());
+        weekStatisticsTask.test();
+    }
 }

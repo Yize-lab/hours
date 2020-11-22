@@ -57,13 +57,14 @@ public interface WarnLogRepository extends JpaRepository<WarnLog, Long> {
     @Query(value="SELECT\n" +
             "\t@num \\:= @num + 1 number,\n" +
             "\ta.department,\n" +
-            "\ta.NAME,\n" +
+            "\ta.NAME,a.p_account as pAccount,\n" +
             "\ta.lackDate \n" +
             "FROM\n" +
             "\t(\n" +
             "\tSELECT\n" +
             "\t\tt1.department department,\n" +
-            "\t\tt1.NAME AS NAME,\n" +
+            "\t\tt1.NAME AS NAME," +
+            "t2.p_account, \n" +
             "\t\tt2.lack_date lackDate \n" +
             "\tFROM\n" +
             "\t\tt_employee t1\n" +

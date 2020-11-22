@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 
 /**
@@ -65,7 +66,7 @@ public class MailSenderUtil {
      * @param empWarnDto
      * @param lackDate   缺失的工时日期
      */
-    @Async
+    @Async("asyncExecutor")
     public void sendEmp(EmpWarnDto empWarnDto, LocalDate lackDate) {
         MailDto mailDto = new MailDto();
         mailDto.setPAccount(empWarnDto.getPAccount());
@@ -183,7 +184,8 @@ public class MailSenderUtil {
             String from = mailSender.getJavaMailProperties().getProperty("from");
             mailDto.setFrom(from);//邮件发信人从配置项读取
             messageHelper.setFrom(mailDto.getFrom());//邮件发信人
-            messageHelper.setTo(mailDto.getTo().split(","));//邮件收信人
+            messageHelper.setTo("gaohj@tcfuture.tech");
+//            messageHelper.setTo(mailDto.getTo().split(","));//邮件收信人
             messageHelper.setSubject(mailDto.getSubject());//邮件主题
 //            String text = String.format(LEADER_CONTENT_TEMPLATE, period);
             if (!StringUtils.isEmpty(mailDto.getCc())) {//抄送
@@ -219,6 +221,16 @@ public class MailSenderUtil {
             log.error("邮件发送失败:", e);
             throw new RuntimeException("邮件发送失败");
         }
+    }
+
+    @Async("asyncExecutor")
+    public void asyncMethod() {
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(Thread.currentThread().getName() + "执行异步方法》》》》》》》》》》》》》》》》》》》");
     }
 
 

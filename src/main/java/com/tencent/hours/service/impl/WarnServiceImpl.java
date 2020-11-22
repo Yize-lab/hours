@@ -161,7 +161,7 @@ public class WarnServiceImpl implements WarnService {
 
     @Override
     public List<DepWarnCountDto> findWeekWarnGroupByEmp() {
-        LocalDate monday = LocalDate.now().minusDays(7).with(ChronoField.DAY_OF_WEEK, 1);
+        LocalDate monday = LocalDate.now().with(ChronoField.DAY_OF_WEEK, 1);
         LocalDate sunday = monday.plusDays(6);
         List<Map<String, Object>> mapList = warnLogRepository.findGroupByEmp(monday, sunday);
         if (!CollectionUtils.isEmpty(mapList)) {
@@ -198,7 +198,7 @@ public class WarnServiceImpl implements WarnService {
 
     @Override
     public List<EmployeeLackDto> findEmpList() {
-        LocalDate monday = LocalDate.now().minusDays(7).with(ChronoField.DAY_OF_WEEK, 1);
+        LocalDate monday = LocalDate.now().with(ChronoField.DAY_OF_WEEK, 1);
         LocalDate sunday = monday.plusDays(6);
         List<Map<String, Object>> mapList = warnLogRepository.findEmpListByLackDate(monday, sunday);
         if (!CollectionUtils.isEmpty(mapList)) {
