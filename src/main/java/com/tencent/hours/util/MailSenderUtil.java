@@ -191,8 +191,8 @@ public class MailSenderUtil {
             String from = mailSender.getJavaMailProperties().getProperty("from");
             mailDto.setFrom(from);//邮件发信人从配置项读取
             messageHelper.setFrom(mailDto.getFrom());//邮件发信人
-            messageHelper.setTo("gaohj@tcfuture.tech");
-//            messageHelper.setTo(mailDto.getTo().split(","));//邮件收信人
+//            messageHelper.setTo("gaohj@tcfuture.tech");
+            messageHelper.setTo(mailDto.getTo().split(","));//邮件收信人
             messageHelper.setSubject(mailDto.getSubject());//邮件主题
             if (!StringUtils.isEmpty(mailDto.getCc())) {//抄送
                 messageHelper.setCc(mailDto.getCc().split(","));
