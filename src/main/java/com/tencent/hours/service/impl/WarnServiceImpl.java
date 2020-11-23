@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -126,8 +127,6 @@ public class WarnServiceImpl implements WarnService {
                 //工时补填更新
                 clearRepair();
                 List<WarnLog> warnLogList = warnLogRepository.findByLackDateAndSendStatus(LocalDate.now(), Boolean.FALSE);
-                // TODO: 2020/11/16 删除临时数据
-
                 if (!CollectionUtils.isEmpty(warnLogList)) {
                     throw new RuntimeException("邮件可能发送失败");
                 }
@@ -161,7 +160,7 @@ public class WarnServiceImpl implements WarnService {
 
     @Override
     public List<DepWarnCountDto> findWeekWarnGroupByEmp() {
-        LocalDate monday = LocalDate.now().with(ChronoField.DAY_OF_WEEK, 1);
+        LocalDate monday = getMonday();
         LocalDate sunday = monday.plusDays(6);
         List<Map<String, Object>> mapList = warnLogRepository.findGroupByEmp(monday, sunday);
         if (!CollectionUtils.isEmpty(mapList)) {
@@ -198,7 +197,7 @@ public class WarnServiceImpl implements WarnService {
 
     @Override
     public List<EmployeeLackDto> findEmpList() {
-        LocalDate monday = LocalDate.now().with(ChronoField.DAY_OF_WEEK, 1);
+        LocalDate monday = getMonday();
         LocalDate sunday = monday.plusDays(6);
         List<Map<String, Object>> mapList = warnLogRepository.findEmpListByLackDate(monday, sunday);
         if (!CollectionUtils.isEmpty(mapList)) {
@@ -206,6 +205,19 @@ public class WarnServiceImpl implements WarnService {
             return employeeLackDtoList;
         }
         return null;
+    }
+
+    private LocalDate getMonday() {
+        DayOfWeek dayOfWeek = LocalDate.now().getDayOfWeek();
+        LocalDate monday;
+        if (DayOfWeek.SUNDAY.equals(dayOfWeek)) {
+            monday = LocalDate.now().with(ChronoField.DAY_OF_WEEK, 1);
+        } else if (DayOfWeek.MONDAY.equals(dayOfWeek)) {
+            monday = LocalDate.now().minusDays(7).with(ChronoField.DAY_OF_WEEK, 1);
+        } else {
+            monday = LocalDate.now().with(ChronoField.DAY_OF_WEEK, 1);
+        }
+        return monday;
     }
 
     /**

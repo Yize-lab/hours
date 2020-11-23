@@ -46,7 +46,6 @@ public class WeekStatisticsTask {
         if (depWarnCountDtoList != null) {
             List<EmployeeLeader> employeeLeaderList = employeeLeaderRepository.findAll();
             List<String> leaderMailList = employeeLeaderList.stream().map(leader -> leader.getEmail()).collect(Collectors.toList());
-//            List<String> tos = Arrays.asList("gaohj@tcfuture.tech", "wangl@tcfuture.tech");
             try {
                 mailSenderUtil.sendLeader(leaderMailList, depWarnCountDtoList, employeeLackDtoList);
                 log.info("工时填报统计邮件发送任务执行成功");
@@ -63,23 +62,5 @@ public class WeekStatisticsTask {
         log.info(" delete all hours temp data!");
     }
 
-    @Scheduled(cron = "0 27 11 ? * sun-mon")
-    public void test() {
-        log.info("test.....thread:{}", Thread.currentThread().getName());
-//        mailSenderUtil.asyncMethod();
-        log.info("asyncMethod.....thread:{}", Thread.currentThread().getName());
-        WeekStatisticsTask statisticsTask = applicationContext.getBean(WeekStatisticsTask.class);
-        statisticsTask.asyncMethod2();
-        log.info(Thread.currentThread().getName() + " 执行完成");
-    }
 
-    @Async("asyncExecutor")
-    public void asyncMethod2() {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println(Thread.currentThread().getName() + "执行异步方法2》》》》》》》》》》》》》》》》》》》");
-    }
 }

@@ -16,6 +16,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,13 +24,12 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Future;
+import java.util.*;
 
 
 /**
@@ -67,14 +67,19 @@ public class MailSenderUtil {
      * @param lackDate   缺失的工时日期
      */
     @Async("asyncExecutor")
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public void sendEmp(EmpWarnDto empWarnDto, LocalDate lackDate) {
-        MailDto mailDto = new MailDto();
-        mailDto.setPAccount(empWarnDto.getPAccount());
-        mailDto.setTo(empWarnDto.getEmail());
-        mailDto.setSubject(EMP_MAIL_TITLE);
-        String text = String.format(EMP_CONTENT_TEMPLATE, DateTimeFormatter.ofPattern(CommonConstant.DateFormat.DEFAULT_DATE_FORMAT).format(lackDate));
-        mailDto.setText(text);
-        send(mailDto, lackDate);
+        WarnLog warnLog = warnLogRepository.findBypAccountAndLackDate(empWarnDto.getPAccount(), lackDate);
+        if (warnLog == null) {
+            MailDto mailDto = new MailDto();
+            mailDto.setPAccount(empWarnDto.getPAccount());
+            mailDto.setTo(empWarnDto.getEmail());
+            mailDto.setSubject(EMP_MAIL_TITLE);
+            String text = String.format(EMP_CONTENT_TEMPLATE, DateTimeFormatter.ofPattern(CommonConstant.DateFormat.DEFAULT_DATE_FORMAT).format(lackDate));
+            mailDto.setText(text);
+            send(mailDto, lackDate);
+        }
+        warnLog.setUpdateTime(LocalDateTime.now());
     }
 
     /**
@@ -165,9 +170,9 @@ public class MailSenderUtil {
             }
             mailSender.send(messageHelper.getMimeMessage());//正式发送邮件
             mailDto.setStatus("ok");
-            log.info("统计邮件发送成功：{}->{}", mailDto.getFrom(), mailDto.getTo());
+            log.info("告警邮件发送成功：{}->{}", mailDto.getFrom(), mailDto.getTo());
         } catch (Exception e) {
-            log.error("统计邮件发送失败：{}", e);
+            log.error("告警邮件发送失败：{}", e);
             throw new RuntimeException(e);//发送失败
         }
     }
@@ -179,6 +184,8 @@ public class MailSenderUtil {
      * @param modelMap
      */
     public void sendTemplateMail(MailDto mailDto, Map<String, Object> modelMap, String period) {
+        File file = null;
+        OutputStreamWriter osw = null;
         try {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailSender.createMimeMessage(), true);//true表示支持复杂类型
             String from = mailSender.getJavaMailProperties().getProperty("from");
@@ -187,7 +194,6 @@ public class MailSenderUtil {
             messageHelper.setTo("gaohj@tcfuture.tech");
 //            messageHelper.setTo(mailDto.getTo().split(","));//邮件收信人
             messageHelper.setSubject(mailDto.getSubject());//邮件主题
-//            String text = String.format(LEADER_CONTENT_TEMPLATE, period);
             if (!StringUtils.isEmpty(mailDto.getCc())) {//抄送
                 messageHelper.setCc(mailDto.getCc().split(","));
             }
@@ -200,37 +206,40 @@ public class MailSenderUtil {
                 String text = String.format(LEADER_CONTENT_TEMPLATE, period) + FreeMarkerTemplateUtils.processTemplateIntoString(template, modelMap);
                 messageHelper.setText(text, true);
             }
-
             Object employeeList = modelMap.get("employeeList");
             if (employeeList != null) {
                 //发送附件
                 Template excelTemplate = freeMarkerConfigurer.getConfiguration().getTemplate("excel.ftl");
-                File file = new File(MailSenderUtil.class.getResource("/emp.xlsx").getPath());
-                excelTemplate.process(modelMap, new FileWriter(file));
+                String uuid = UUID.randomUUID().toString();
+                String fileName = "emp" + uuid + ".xlsx";
+                String tmpdir = System.getProperty("java.io.tmpdir");
+                file = new File(tmpdir, fileName);
+                file.createNewFile();
+                osw = new FileWriter(file);
+                excelTemplate.process(modelMap, osw);
                 messageHelper.addAttachment(FILE_NAME, file);
             }
-
             if (StringUtils.isEmpty(mailDto.getSentDate())) {//发送时间
                 mailDto.setSentDate(new Date());
                 messageHelper.setSentDate(mailDto.getSentDate());
             }
             mailSender.send(messageHelper.getMimeMessage());//正式发送邮件
             mailDto.setStatus("ok");
-            log.info("发送邮件成功：{}->{}", mailDto.getFrom(), mailDto.getTo());
+            log.info("leader统计发送邮件成功：{}->{}", mailDto.getFrom(), mailDto.getTo());
         } catch (Exception e) {
-            log.error("邮件发送失败:", e);
+            log.error("leader统计邮件发送失败:", e);
             throw new RuntimeException("邮件发送失败");
+        } finally {
+            if (file != null) {
+                try {
+                    osw.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                boolean delete = file.delete();
+                log.info("delete temp file:{}->status:{}", file, delete);
+            }
         }
-    }
-
-    @Async("asyncExecutor")
-    public void asyncMethod() {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println(Thread.currentThread().getName() + "执行异步方法》》》》》》》》》》》》》》》》》》》");
     }
 
 

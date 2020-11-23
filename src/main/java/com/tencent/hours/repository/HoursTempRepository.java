@@ -28,7 +28,7 @@ public interface HoursTempRepository extends JpaRepository<HoursTemp, Long> {
             "MAX(t2.spend_date) lastSpendDate\n" +
             "FROM\n" +
             "\tt_employee t1\n" +
-            "\tLEFT JOIN t_hours_temp t2 ON t1.p_account = t2.p_account\n" +
+            "\tINNER JOIN t_hours_temp t2 ON t1.p_account = t2.p_account\n" +
             "\tGROUP BY t1.p_account", nativeQuery = true)
     List<Map<String, String>> findLastSpendDate();
 }

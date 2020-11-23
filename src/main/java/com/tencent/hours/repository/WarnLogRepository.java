@@ -77,4 +77,6 @@ public interface WarnLogRepository extends JpaRepository<WarnLog, Long> {
             "\t) AS a,\n" +
             "\t( SELECT @num \\:= 0 ) n",nativeQuery = true)
     List<Map<String, Object>> findEmpListByLackDate(@Param("startDate") LocalDate startDate, @Param("endDate")LocalDate endDate);
+
+    WarnLog findBypAccountAndLackDate(String pAccount, LocalDate lackDate);
 }
