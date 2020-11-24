@@ -22,10 +22,8 @@ import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -185,14 +183,13 @@ public class MailSenderUtil {
      */
     public void sendTemplateMail(MailDto mailDto, Map<String, Object> modelMap, String period) {
         File file = null;
-        OutputStreamWriter osw = null;
         try {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailSender.createMimeMessage(), true);//true表示支持复杂类型
             String from = mailSender.getJavaMailProperties().getProperty("from");
             mailDto.setFrom(from);//邮件发信人从配置项读取
             messageHelper.setFrom(mailDto.getFrom());//邮件发信人
-//            messageHelper.setTo("gaohj@tcfuture.tech");
-            messageHelper.setTo(mailDto.getTo().split(","));//邮件收信人
+            messageHelper.setTo("gaohj@tcfuture.tech");
+//            messageHelper.setTo(mailDto.getTo().split(","));//邮件收信人
             messageHelper.setSubject(mailDto.getSubject());//邮件主题
             if (!StringUtils.isEmpty(mailDto.getCc())) {//抄送
                 messageHelper.setCc(mailDto.getCc().split(","));
@@ -209,15 +206,16 @@ public class MailSenderUtil {
             Object employeeList = modelMap.get("employeeList");
             if (employeeList != null) {
                 //发送附件
-                Template excelTemplate = freeMarkerConfigurer.getConfiguration().getTemplate("excel.ftl");
+//                Template excelTemplate = freeMarkerConfigurer.getConfiguration().getTemplate("excel.ftl");
                 String uuid = UUID.randomUUID().toString();
                 String fileName = "emp" + uuid + ".xlsx";
                 String tmpdir = System.getProperty("java.io.tmpdir");
                 file = new File(tmpdir, fileName);
                 file.createNewFile();
-                osw = new FileWriter(file);
-                excelTemplate.process(modelMap, osw);
-                messageHelper.addAttachment(FILE_NAME, file);
+                //打成jar包后获取不到resource下面的文件，只能获取文件流
+                InputStream is = this.getClass().getClassLoader().getResourceAsStream("emp_template.xlsx");
+                File targetFile = ExcelExportUtil.exportToFile(is, modelMap, file);
+                messageHelper.addAttachment(FILE_NAME, targetFile);
             }
             if (StringUtils.isEmpty(mailDto.getSentDate())) {//发送时间
                 mailDto.setSentDate(new Date());
@@ -231,11 +229,7 @@ public class MailSenderUtil {
             throw new RuntimeException("邮件发送失败");
         } finally {
             if (file != null) {
-                try {
-                    osw.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+
                 boolean delete = file.delete();
                 log.info("delete temp file:{}->status:{}", file, delete);
             }
