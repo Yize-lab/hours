@@ -62,7 +62,7 @@ public interface WarnLogRepository extends JpaRepository<WarnLog, Long> {
             "\ta.lackDate \n" +
             "FROM\n" +
             "\t(\n" +
-            "\tSELECT\n" +
+            "\tSELECT DISTINCT\n" +
             "\t\tt1.department department,\n" +
             "\t\tt1.NAME AS NAME,\n" +
             "\t\tt2.p_account, \n" +
@@ -73,9 +73,8 @@ public interface WarnLogRepository extends JpaRepository<WarnLog, Long> {
             "\tWHERE\n" +
             "\t\tt2.lack_date BETWEEN :startDate\n" +
             "\t\tAND :endDate \n" +
-            "\t\tGROUP BY t2.p_account\n" +
             "\tORDER BY\n" +
-            "\t\tdepartment ASC \n" +
+            "\t\tdepartment ,p_account ASC \n" +
             "\t) AS a,\n" +
             "\t( SELECT @num \\:= 0 ) n",nativeQuery = true)
     List<Map<String, Object>> findEmpListByLackDate(@Param("startDate") LocalDate startDate, @Param("endDate")LocalDate endDate);

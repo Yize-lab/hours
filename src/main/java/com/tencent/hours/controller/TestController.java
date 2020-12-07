@@ -24,5 +24,10 @@ public class TestController {
         weekStatisticsTask.sendWeekWarnMail();
     }
 
+    @GetMapping("thread/test")
+    public void threadTest(){
+        weekStatisticsTask.task1();
+    }
+
 
 }

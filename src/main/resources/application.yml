@@ -27,7 +27,7 @@ spring:
 
   #db config
   datasource:
-    url: jdbc:mysql://localhost:3306/db_hours?useSSL=false&characterEncoding=utf8&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/db_hours?useSSL=false&characterEncoding=utf8&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -39,7 +39,7 @@ spring:
       max-lifetime: 1800000
       pool-name: XddHikariCP
   redis:
-    host: localhost
+    host: 127.0.0.1
     port: 6379
     database: 1
   jpa:
